@@ -1,0 +1,50 @@
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: Iz3fI5E9TArnz6tvW3O1dUZ
+      POSTGRES_DB: keycloak_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pg_data:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    command: start-dev
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: admin #alan.padua
+      KC_BOOTSTRAP_ADMIN_PASSWORD: JRM4KpWts38Wul3jgdpT3BP #JRM4KpWts38Wul3jgdpT3BP
+      # Configurações de Banco de Dados
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak_db
+      KC_DB_USERNAME: admin
+      KC_DB_PASSWORD: Iz3fI5E9TArnz6tvW3O1dUZ
+    ports:
+      - "8080:8080"
+    depends_on:
+      - postgres
+    networks:
+      - app-network
+
+  # O Vite rodará aqui para desenvolvimento
+  frontend:
+    build: ./frontend-vite
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend-vite:/app
+      - /app/node_modules
+    environment:
+      - VITE_NODE_API_URL=http://localhost:3000
+      - VITE_GO_API_URL=http://localhost:8000
+      - VITE_KEYCLOAK_URL=http://localhost:8080
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
